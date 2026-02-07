@@ -1,0 +1,74 @@
+stages:
+  data_loader:
+    cmd: python src/data_loader.py
+    deps:
+      - src/data_loader.py
+    params:
+      - data.raw_path
+      - data.dataset_url
+    outs:
+      - data/raw/data.csv
+
+  preprocess:
+    cmd: python src/preprocess.py
+    deps:
+      - src/preprocess.py
+      - data/raw/data.csv
+    params:
+      - data.raw_path
+      - data.processed_path
+      - preprocessing
+    outs:
+      - data/processed/processed.csv
+
+  features:
+    cmd: python src/features.py
+    deps:
+      - src/features.py
+      - data/processed/processed.csv
+    params:
+      - data.processed_path
+      - features
+      - output.train_features_path
+      - output.test_features_path
+      - output.train_labels_path
+      - output.test_labels_path
+      - output.vectorizer_path
+    outs:
+      - data/processed/X_train.pkl
+      - data/processed/X_test.pkl
+      - data/processed/y_train.pkl
+      - data/processed/y_test.pkl
+      - models/vectorizer.pkl
+
+  train:
+    cmd: python src/train.py
+    deps:
+      - src/train.py
+      - data/processed/X_train.pkl
+      - data/processed/y_train.pkl
+      - models/vectorizer.pkl
+    params:
+      - model
+      - output.model_path
+      - output.train_features_path
+      - output.train_labels_path
+      - mlflow
+    outs:
+      - models/model.pkl
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+      - src/evaluate.py
+      - models/model.pkl
+      - data/processed/X_test.pkl
+      - data/processed/y_test.pkl
+    params:
+      - output.model_path
+      - output.test_features_path
+      - output.test_labels_path
+      - mlflow
+    metrics:
+      - metrics.json:
+          cache: false

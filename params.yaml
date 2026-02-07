@@ -1,0 +1,51 @@
+# Data Configuration
+data:
+  raw_path: data/raw/data.csv
+  processed_path: data/processed/processed.csv
+  dataset_url: https://raw.githubusercontent.com/justmarkham/pycon-2016-tutorial/master/data/sms.tsv
+
+# Preprocessing Configuration
+preprocessing:
+  text_column: message
+  label_column: label
+  remove_punctuation: true
+  lowercase: true
+  remove_stopwords: true
+  min_text_length: 3
+
+# Feature Engineering Configuration
+features:
+  method: tfidf
+  max_features: 3000
+  ngram_range: [1, 2]
+  min_df: 2
+  max_df: 0.95
+  train_test_split:
+    test_size: 0.2
+    random_state: 42
+    stratify: true
+
+# Model Training Configuration
+model:
+  algorithm: logistic_regression  # Options: logistic_regression, naive_bayes
+  logistic_regression:
+    C: 1.0
+    max_iter: 1000
+    solver: liblinear
+    random_state: 42
+  naive_bayes:
+    alpha: 1.0
+
+# MLflow Configuration
+mlflow:
+  experiment_name: SMS_Spam_Classification
+  tracking_uri: mlruns
+  
+# Model Output
+output:
+  model_path: models/model.pkl
+  vectorizer_path: models/vectorizer.pkl
+  train_features_path: data/processed/X_train.pkl
+  test_features_path: data/processed/X_test.pkl
+  train_labels_path: data/processed/y_train.pkl
+  test_labels_path: data/processed/y_test.pkl
