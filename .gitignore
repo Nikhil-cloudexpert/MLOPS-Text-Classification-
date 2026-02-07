@@ -1,0 +1,7 @@
+__pycache__/
+.env
+.venv
+mlruns/
+data/raw/*.csv
+data/processed/*.csv
+models/*.pkl
