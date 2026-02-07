@@ -1,0 +1,171 @@
+schema: '2.0'
+stages:
+  data_loader:
+    cmd: python src/data_loader.py
+    deps:
+    - path: src/data_loader.py
+      hash: md5
+      md5: e82b2dbe71722888db7a886faecedb29
+      size: 2178
+    params:
+      params.yaml:
+        data.dataset_url: 
+          https://raw.githubusercontent.com/justmarkham/pycon-2016-tutorial/master/data/sms.tsv
+        data.raw_path: data/raw/data.csv
+    outs:
+    - path: data/raw/data.csv
+      hash: md5
+      md5: 8e5f00e0983d982a0b6bfb8a85529c54
+      size: 486379
+  preprocess:
+    cmd: python src/preprocess.py
+    deps:
+    - path: data/raw/data.csv
+      hash: md5
+      md5: 8e5f00e0983d982a0b6bfb8a85529c54
+      size: 486379
+    - path: src/preprocess.py
+      hash: md5
+      md5: dc4a9f38edeb7e210ed2535dd68d83d2
+      size: 4976
+    params:
+      params.yaml:
+        data.processed_path: data/processed/processed.csv
+        data.raw_path: data/raw/data.csv
+        preprocessing:
+          text_column: message
+          label_column: label
+          remove_punctuation: true
+          lowercase: true
+          remove_stopwords: true
+          min_text_length: 3
+    outs:
+    - path: data/processed/processed.csv
+      hash: md5
+      md5: c8ee7cf857cb915e8aa663b3730d1e0c
+      size: 787481
+  features:
+    cmd: python src/features.py
+    deps:
+    - path: data/processed/processed.csv
+      hash: md5
+      md5: c8ee7cf857cb915e8aa663b3730d1e0c
+      size: 787481
+    - path: src/features.py
+      hash: md5
+      md5: 612cf1726e649794a800dd668524c4e9
+      size: 5117
+    params:
+      params.yaml:
+        data.processed_path: data/processed/processed.csv
+        features:
+          method: tfidf
+          max_features: 3000
+          ngram_range:
+          - 1
+          - 2
+          min_df: 2
+          max_df: 0.95
+          train_test_split:
+            test_size: 0.2
+            random_state: 42
+            stratify: true
+        output.test_features_path: data/processed/X_test.pkl
+        output.test_labels_path: data/processed/y_test.pkl
+        output.train_features_path: data/processed/X_train.pkl
+        output.train_labels_path: data/processed/y_train.pkl
+        output.vectorizer_path: models/vectorizer.pkl
+    outs:
+    - path: data/processed/X_test.pkl
+      hash: md5
+      md5: c4ada87a7c75df3bc7d2f701f6a47b19
+      size: 110659
+    - path: data/processed/X_train.pkl
+      hash: md5
+      md5: cd6e23665db961a0588ae7ec362b03d7
+      size: 437163
+    - path: data/processed/y_test.pkl
+      hash: md5
+      md5: c4e069a5d03fb1458ac80b023ec0f8be
+      size: 9097
+    - path: data/processed/y_train.pkl
+      hash: md5
+      md5: 2dca9f4a3a76306af979334fd5554c7c
+      size: 35697
+    - path: models/vectorizer.pkl
+      hash: md5
+      md5: 679492922b5e6a7dc658e12f5268543c
+      size: 613142
+  train:
+    cmd: python src/train.py
+    deps:
+    - path: data/processed/X_train.pkl
+      hash: md5
+      md5: cd6e23665db961a0588ae7ec362b03d7
+      size: 437163
+    - path: data/processed/y_train.pkl
+      hash: md5
+      md5: 2dca9f4a3a76306af979334fd5554c7c
+      size: 35697
+    - path: models/vectorizer.pkl
+      hash: md5
+      md5: 679492922b5e6a7dc658e12f5268543c
+      size: 613142
+    - path: src/train.py
+      hash: md5
+      md5: 2f7946a735bb5d5a8d741a9257e140e9
+      size: 6595
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: SMS_Spam_Classification
+          tracking_uri: mlruns
+        model:
+          algorithm: logistic_regression
+          logistic_regression:
+            C: 1.0
+            max_iter: 1000
+            solver: liblinear
+            random_state: 42
+          naive_bayes:
+            alpha: 1.0
+        output.model_path: models/model.pkl
+        output.train_features_path: data/processed/X_train.pkl
+        output.train_labels_path: data/processed/y_train.pkl
+    outs:
+    - path: models/model.pkl
+      hash: md5
+      md5: 7f5bd485b131e41c8ad133e9835e8a47
+      size: 24875
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - path: data/processed/X_test.pkl
+      hash: md5
+      md5: c4ada87a7c75df3bc7d2f701f6a47b19
+      size: 110659
+    - path: data/processed/y_test.pkl
+      hash: md5
+      md5: c4e069a5d03fb1458ac80b023ec0f8be
+      size: 9097
+    - path: models/model.pkl
+      hash: md5
+      md5: 7f5bd485b131e41c8ad133e9835e8a47
+      size: 24875
+    - path: src/evaluate.py
+      hash: md5
+      md5: d4b60c21bec318784ed43399bd9de552
+      size: 6037
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: SMS_Spam_Classification
+          tracking_uri: mlruns
+        output.model_path: models/model.pkl
+        output.test_features_path: data/processed/X_test.pkl
+        output.test_labels_path: data/processed/y_test.pkl
+    outs:
+    - path: metrics.json
+      hash: md5
+      md5: 4f6db832ed5ed71c58e6da57de3a7ec3
+      size: 316
